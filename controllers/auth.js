@@ -34,6 +34,7 @@ async function login(req, res, next) {
         if (!user) {
             const err = new Error('Authentication failed');
             err.status = 403;
+            err.name = 'AuthFailed';
             return next(err);
         }
 

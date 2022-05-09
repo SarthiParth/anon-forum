@@ -59,6 +59,7 @@ exports.verifyRequestUserAuthorization = (req, res, next) => {
             "You don't have enough permission to perform this action"
         );
         err.status = 403;
+        err.name = 'InsufficientPermissions';
         next(err);
     }
 };

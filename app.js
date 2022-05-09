@@ -7,6 +7,7 @@ const passport = require('passport');
 // Import all the internal routers from the app
 const authRouter = require('./routes/auth');
 const thoughtRouter = require('./routes/thought');
+const replyRouter = require('./routes/reply');
 
 // Initialise the express application
 const app = express();
@@ -40,6 +41,7 @@ app.use('/auth', authRouter);
 
 // Setup routers for endpoints backed by authentication systems
 app.use('/api/v1/thought', thoughtRouter);
+app.use('/api/v1/reply', replyRouter);
 
 // Middleware to server the static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
