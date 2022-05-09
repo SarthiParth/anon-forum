@@ -28,4 +28,34 @@ async function createReply(req, res, next) {
     }
 }
 
-module.exports = { createReply };
+async function deleteReply(req, res, next) {
+    try {
+        const reply = await Reply.findById(req.params.replyId);
+        if (!reply) {
+            const err = new Error('No reply found with given id');
+            err.status = 404;
+            err.name = 'DocumentNotFound';
+            return next(err);
+        }
+        if (String(reply.postedBy) !== String(req.user._id)) {
+            const err = new Error('You can only delete your posted replies');
+            err.status = 403;
+            err.name = 'InsufficientPermissions';
+            return next(err);
+        }
+
+        await Reply.deleteOne({
+            _id: reply._id,
+            postedBy: req.user._id,
+        });
+
+        res.status(200).send({
+            ok: true,
+            message: 'Reply deleted successfully',
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = { createReply, deleteReply };
