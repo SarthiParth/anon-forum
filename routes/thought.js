@@ -4,7 +4,11 @@ const cors = require('../utils/cors');
 
 const { verifyUser } = require('../utils/auth');
 
-const { createThought, deleteThought } = require('../controllers/thought');
+const {
+    getAllThoughts,
+    createThought,
+    deleteThought,
+} = require('../controllers/thought');
 
 // Initialise the authentication router
 const thoughtRouter = express.Router();
@@ -16,7 +20,10 @@ thoughtRouter.use(express.json());
 thoughtRouter.use(cors.corsWithOptions);
 
 // Define all the routes for thoughts
-thoughtRouter.route('/create').post(verifyUser, createThought);
+thoughtRouter
+    .route('/')
+    .get(verifyUser, getAllThoughts)
+    .post(verifyUser, createThought);
 thoughtRouter.route('/:thoughtId').delete(verifyUser, deleteThought);
 
 module.exports = thoughtRouter;
