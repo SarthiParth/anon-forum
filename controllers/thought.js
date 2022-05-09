@@ -31,11 +31,21 @@ async function getAllThoughts(req, res, next) {
             },
         },
         {
+            $unwind: {
+                path: '$author',
+            },
+        },
+        {
             $addFields: {
                 postedBy: {
                     $cond: [
                         {
-                            $eq: ['$anonymous', false],
+                            $or: [
+                                { $eq: ['$anonymous', false] },
+                                {
+                                    $eq: ['$author._id', req.user._id],
+                                },
+                            ],
                         },
                         '$author',
                         'anonymous',
@@ -90,11 +100,24 @@ async function getAllThoughts(req, res, next) {
                         },
                     },
                     {
+                        $unwind: {
+                            path: '$author',
+                        },
+                    },
+                    {
                         $addFields: {
                             postedBy: {
                                 $cond: [
                                     {
-                                        $eq: ['$anonymous', false],
+                                        $or: [
+                                            { $eq: ['$anonymous', false] },
+                                            {
+                                                $eq: [
+                                                    '$author._id',
+                                                    req.user._id,
+                                                ],
+                                            },
+                                        ],
                                     },
                                     '$author',
                                     'anonymous',
