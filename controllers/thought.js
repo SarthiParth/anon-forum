@@ -135,6 +135,49 @@ async function getAllThoughts(req, res, next) {
     }
 }
 
+async function getIndividualThought(req, res, next) {
+    try {
+        let thought;
+        const thoughtDoc = await Thought.findById(req.params.thoughtId);
+
+        if (
+            !thoughtDoc.anonymous ||
+            String(thoughtDoc.postedBy) === String(req.user._id)
+        ) {
+            thought = await Thought.findById(req.params.thoughtId).populate({
+                path: 'postedBy',
+                select: 'fullName username',
+            });
+        } else {
+            thought = { ...thoughtDoc._doc };
+            thought.postedBy = 'anonymous';
+        }
+
+        const allReplies = await Reply.find({
+            parent: req.params.thoughtId,
+        }).populate({ path: 'postedBy', select: 'fullName username' });
+
+        const replies = allReplies.map((reply) => {
+            const replyCopy = { ...reply._doc };
+            if (
+                replyCopy.anonymous &&
+                String(replyCopy.postedBy._id) !== String(req.user._id)
+            ) {
+                replyCopy.postedBy = 'anonymous';
+            }
+            return replyCopy;
+        });
+
+        res.status(200).send({
+            ok: true,
+            thought,
+            replies,
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
 async function createThought(req, res, next) {
     try {
         const thought = await Thought.create({
@@ -180,4 +223,9 @@ async function deleteThought(req, res, next) {
     }
 }
 
-module.exports = { getAllThoughts, createThought, deleteThought };
+module.exports = {
+    getAllThoughts,
+    getIndividualThought,
+    createThought,
+    deleteThought,
+};
