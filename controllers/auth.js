@@ -3,6 +3,7 @@ const passport = require('passport');
 const { User } = require('../models/user');
 
 const { getToken } = require('../utils/auth');
+const { AuthFailed } = require('../utils/errors');
 
 async function signup(req, res, next) {
     const user = new User({
@@ -32,10 +33,7 @@ async function login(req, res, next) {
             return next(error);
         }
         if (!user) {
-            const err = new Error('Authentication failed');
-            err.status = 403;
-            err.name = 'AuthFailed';
-            return next(err);
+            return next(AuthFailed);
         }
 
         req.login(user, async (loginErr) => {

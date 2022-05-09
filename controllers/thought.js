@@ -1,5 +1,9 @@
 const { Thought } = require('../models/thought');
 const { Reply } = require('../models/reply');
+const {
+    InsufficientPermissions,
+    DocumentNotFound,
+} = require('../utils/errors');
 
 async function createThought(req, res, next) {
     try {
@@ -23,16 +27,10 @@ async function deleteThought(req, res, next) {
     try {
         const thought = await Thought.findById(req.params.thoughtId);
         if (!thought) {
-            const err = new Error('No thought found with given id');
-            err.status = 404;
-            err.name = 'DocumentNotFound';
-            return next(err);
+            return next(DocumentNotFound);
         }
         if (String(thought.postedBy) !== String(req.user._id)) {
-            const err = new Error('You can only delete your posted thoughts');
-            err.status = 403;
-            err.name = 'InsufficientPermissions';
-            return next(err);
+            return next(InsufficientPermissions);
         }
 
         await Thought.deleteOne({

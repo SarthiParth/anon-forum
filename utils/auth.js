@@ -9,6 +9,7 @@ const { ExtractJwt } = require('passport-jwt');
 const config = require('../config/base');
 
 const { User } = require('../models/user');
+const { InsufficientPermissions } = require('./errors');
 
 // Implementation of the local passport strategy
 passport.use(new LocalStrategy(User.authenticate()));
@@ -55,11 +56,6 @@ exports.verifyRequestUserAuthorization = (req, res, next) => {
     if (String(req.user._id) === String(req.params.userId)) {
         next();
     } else {
-        const err = new Error(
-            "You don't have enough permission to perform this action"
-        );
-        err.status = 403;
-        err.name = 'InsufficientPermissions';
-        next(err);
+        next(InsufficientPermissions);
     }
 };
