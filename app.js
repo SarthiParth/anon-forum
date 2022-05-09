@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const passport = require('passport');
 
 // Import all the internal routers from the app
+const authRouter = require('./routes/auth');
 
 // Initialise the express application
 const app = express();
@@ -33,12 +34,12 @@ app.disable('x-powered-by');
 // access user attributes while authentication
 app.use(passport.initialize());
 
-// Setup up the router for unregistered users (signup/login/logout)
+// Setup up the router for unauthenticated users (signup/login)
+app.use('/auth', authRouter);
 
 // Setup routers for endpoints backed by authentication systems
 
-// Middleware to server the static files from public
-// directory
+// Middleware to server the static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 // catch 404 and forward to error handler
