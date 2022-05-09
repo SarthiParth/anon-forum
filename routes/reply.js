@@ -15,7 +15,7 @@ replyRouter.use(express.json());
 // Enable CORS for all routes
 replyRouter.use(cors.corsWithOptions);
 
-// Define all the routes for thoughts
+// Define all the routes for replies
 replyRouter.route('/:thoughtId').post(verifyUser, createReply);
 replyRouter.route('/:replyId').delete(verifyUser, deleteReply);
 

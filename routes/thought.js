@@ -6,9 +6,10 @@ const { verifyUser } = require('../utils/auth');
 
 const {
     getAllThoughts,
+    getIndividualThought,
+    getUserThoughts,
     createThought,
     deleteThought,
-    getIndividualThought,
 } = require('../controllers/thought');
 
 // Initialise the authentication router
@@ -25,9 +26,12 @@ thoughtRouter
     .route('/')
     .get(verifyUser, getAllThoughts)
     .post(verifyUser, createThought);
+
 thoughtRouter
     .route('/:thoughtId')
     .get(verifyUser, getIndividualThought)
     .delete(verifyUser, deleteThought);
+
+thoughtRouter.route('/user/:userId').get(verifyUser, getUserThoughts);
 
 module.exports = thoughtRouter;

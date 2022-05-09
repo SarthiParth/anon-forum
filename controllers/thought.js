@@ -1,3 +1,4 @@
+const { ObjectId } = require('mongoose').Types;
 const { Thought } = require('../models/thought');
 const { Reply } = require('../models/reply');
 
@@ -6,12 +7,11 @@ const {
     DocumentNotFound,
 } = require('../utils/errors');
 
-async function getAllThoughts(req, res, next) {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
-    const skip = (page - 1) * limit;
-
+function generateAggPipeline(query, skip, limit, reqUserId) {
     const pipeline = [
+        {
+            $match: query,
+        },
         {
             $sort: { createdAt: -1 },
         },
@@ -43,7 +43,7 @@ async function getAllThoughts(req, res, next) {
                             $or: [
                                 { $eq: ['$anonymous', false] },
                                 {
-                                    $eq: ['$author._id', req.user._id],
+                                    $eq: ['$author._id', reqUserId],
                                 },
                             ],
                         },
@@ -112,10 +112,7 @@ async function getAllThoughts(req, res, next) {
                                         $or: [
                                             { $eq: ['$anonymous', false] },
                                             {
-                                                $eq: [
-                                                    '$author._id',
-                                                    req.user._id,
-                                                ],
+                                                $eq: ['$author._id', reqUserId],
                                             },
                                         ],
                                     },
@@ -138,6 +135,15 @@ async function getAllThoughts(req, res, next) {
             },
         },
     ];
+    return pipeline;
+}
+
+async function getAllThoughts(req, res, next) {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    const pipeline = generateAggPipeline({}, skip, limit, req.user._id);
 
     try {
         const thoughts = await Thought.aggregate(pipeline);
@@ -201,6 +207,40 @@ async function getIndividualThought(req, res, next) {
     }
 }
 
+async function getUserThoughts(req, res, next) {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    const query = {};
+
+    if (req.params.userId === String(req.user._id)) {
+        query.postedBy = req.user._id;
+    } else {
+        query.postedBy = new ObjectId(req.params.userId);
+        query.anonymous = false;
+    }
+
+    const pipeline = generateAggPipeline(query, skip, limit, req.user._id);
+    try {
+        const thoughts = await Thought.aggregate(pipeline);
+
+        const totalThoughts = await Thought.countDocuments(query);
+
+        res.status(200).send({
+            ok: true,
+            count: thoughts.length,
+            thoughts,
+            meta: {
+                totalThoughts,
+                totalPages: Math.ceil(totalThoughts / limit),
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
 async function createThought(req, res, next) {
     try {
         const thought = await Thought.create({
@@ -249,6 +289,7 @@ async function deleteThought(req, res, next) {
 module.exports = {
     getAllThoughts,
     getIndividualThought,
+    getUserThoughts,
     createThought,
     deleteThought,
 };
